@@ -187,18 +187,18 @@ function renderChart(models) {
     const labels = sorted.map(m => m.name || m.id)
     const outputData = sorted.map(m => c(getBestPrice(m).output) || 0)
 
-    const colors = ['#58a6ff', '#3fb950', '#d29922', '#f85149', '#b392f0', '#db6d28', '#79c0ff', '#56d364', '#e3b341', '#ff7b72', '#bc8cff', '#f0883e', '#7ee787', '#ffa657', '#a5d6ff']
+    const colors = ['#1a73e8', '#188038', '#ea8600', '#d93025', '#9334e6', '#e37400', '#4285f4', '#34a853', '#fbbc04', '#ea4335', '#a142f4', '#fa7b17', '#24c17b', '#f8632e', '#46bdc6']
 
     chart = new Chart(ctx, {
       type: 'pie',
       data: {
         labels,
-        datasets: [{ data: outputData, backgroundColor: colors.slice(0, sorted.length), borderColor: '#0d1117', borderWidth: 2 }]
+        datasets: [{ data: outputData, backgroundColor: colors.slice(0, sorted.length), borderColor: '#fff', borderWidth: 2 }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'right', labels: { color: '#e6edf3', font: { size: 10 }, boxWidth: 12, padding: 8 } },
+          legend: { position: 'right', labels: { color: '#5f6368', font: { size: 10 }, boxWidth: 12, padding: 8 } },
           tooltip: { callbacks: { label: ctx => ctx.label + ': ' + f(sorted[ctx.dataIndex] ? getBestPrice(sorted[ctx.dataIndex]).output : 0) } }
         }
       }
@@ -216,16 +216,16 @@ function renderChart(models) {
     data: {
       labels,
       datasets: [
-        { label: 'Input', data: inputData, backgroundColor: '#58a6ff80', borderColor: '#58a6ff', borderWidth: 1, borderRadius: 3 },
-        { label: 'Output', data: outputData, backgroundColor: '#3fb95080', borderColor: '#3fb950', borderWidth: 1, borderRadius: 3 },
+        { label: 'Input', data: inputData, backgroundColor: '#1a73e880', borderColor: '#1a73e8', borderWidth: 1, borderRadius: 3 },
+        { label: 'Output', data: outputData, backgroundColor: '#18803880', borderColor: '#188038', borderWidth: 1, borderRadius: 3 },
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#e6edf3', font: { size: 11 } } } },
+      plugins: { legend: { labels: { color: '#5f6368', font: { size: 11 } } } },
       scales: {
-        x: { ticks: { color: '#8b949e', font: { size: 9 } }, grid: { color: '#30363d' } },
-        y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#30363d' }, beginAtZero: true },
+        x: { ticks: { color: '#5f6368', font: { size: 9 } }, grid: { color: '#e8eaed' } },
+        y: { ticks: { color: '#5f6368', font: { size: 10 } }, grid: { color: '#e8eaed' }, beginAtZero: true },
       }
     }
   })
@@ -386,6 +386,9 @@ Promise.all([
   allModels = priceData.models || []
   rates = rateData
   document.getElementById('updated').textContent = new Date(priceData.updated_at).toLocaleString()
+  const s = syms[currency] || '$'
+  document.getElementById('coinInd').textContent = s
+  document.getElementById('coinInd2').textContent = s
   document.getElementById('rateInfo').textContent = `USD 1 = ${currency === 'USD' ? '1' : rates[currency] ? rates[currency].toFixed(2) : '?'} ${currency}`
   document.getElementById('chartSkel').style.display = 'none'
   populateCompare()
@@ -404,12 +407,9 @@ function updateRangeLabels() {
   const min = parseFloat(document.getElementById('minRange').value)
   const max = parseFloat(document.getElementById('maxRange').value)
   const pct = (parseFloat(document.getElementById('maxRange').max))
-  const sym = currency === 'BRL' ? 'R$' : currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency === 'JPY' ? '¥' : currency === 'CAD' ? 'C$' : currency === 'AUD' ? 'A$' : currency === 'CNY' ? '¥' : currency === 'ARS' ? '$' : '$'
-  document.getElementById('rangeLabelMin').textContent = min === 0 ? sym + '0' : sym + min.toFixed(2)
-  document.getElementById('rangeLabelMax').textContent = max >= pct ? '∞' : sym + max.toFixed(2)
+  document.getElementById('rangeLabelMin').value = min.toFixed(2)
+  document.getElementById('rangeLabelMax').value = max >= pct ? '' : max.toFixed(2)
   const fill = document.getElementById('rangeFill')
-  const el = document.getElementById('rangeSlider')
-  const w = el.offsetWidth || 180
   const minPct = (min / pct) * 100
   const maxPct = (max / pct) * 100
   fill.style.left = minPct + '%'
@@ -431,8 +431,36 @@ document.getElementById('maxRange').addEventListener('input', function () {
   render()
 })
 
+document.getElementById('rangeLabelMin').addEventListener('change', function () {
+  const max = parseFloat(document.getElementById('maxRange').value)
+  const pct = parseFloat(document.getElementById('maxRange').max)
+  let val = parseFloat(this.value)
+  if (isNaN(val)) val = 0
+  val = Math.max(0, Math.min(val, max - 0.01, pct))
+  document.getElementById('minRange').value = val
+  updateRangeLabels()
+  render()
+})
+document.getElementById('rangeLabelMax').addEventListener('change', function () {
+  const min = parseFloat(document.getElementById('minRange').value)
+  const pct = parseFloat(document.getElementById('maxRange').max)
+  let val = parseFloat(this.value)
+  if (isNaN(val)) val = pct
+  val = Math.max(min + 0.01, Math.min(val, pct))
+  document.getElementById('maxRange').value = val
+  updateRangeLabels()
+  render()
+})
+document.getElementById('rangeLabelMin').addEventListener('focus', function () { this.select() })
+document.getElementById('rangeLabelMax').addEventListener('focus', function () { this.select() })
+
+const syms = { BRL: 'R$', USD: '$', EUR: '€', GBP: '£', JPY: '¥', CAD: 'C$', AUD: 'A$', CNY: '¥', ARS: '$' }
+
 document.getElementById('currency').addEventListener('change', function () {
   currency = this.value
+  const s = syms[currency] || '$'
+  document.getElementById('coinInd').textContent = s
+  document.getElementById('coinInd2').textContent = s
   document.getElementById('rateInfo').textContent = `USD 1 = ${currency === 'USD' ? '1' : rates[currency] ? rates[currency].toFixed(2) : '?'} ${currency}`
   const prices = allModels.map(m => { const p = getBestPrice(m); return p.input != null ? c(p.input) : (p.output != null ? c(p.output) : null) }).filter(v => v != null)
   const maxP = prices.length ? Math.ceil(Math.max(...prices)) : 100
@@ -458,8 +486,14 @@ document.querySelectorAll('#mainTabs .tab').forEach(t => {
 
 document.querySelectorAll('.chart-type').forEach(b => {
   b.addEventListener('click', () => {
-    document.querySelectorAll('.chart-type').forEach(x => x.classList.remove('active'))
+    document.querySelectorAll('.chart-type').forEach(x => {
+      x.classList.remove('active')
+      x.style.background = 'transparent'
+      x.style.color = 'var(--text-2)'
+    })
     b.classList.add('active')
+    b.style.background = 'var(--accent)'
+    b.style.color = '#fff'
     chartType = b.dataset.chart
     render()
   })

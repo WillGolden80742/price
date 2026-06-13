@@ -12,9 +12,23 @@
 <header>
   <h1><span class="mdi mdi-chart-box-outline"></span> Model Prices</h1>
   <div class="controls">
-    <div class="search-wrap">
-      <span class="mdi mdi-magnify"></span>
-      <input id="search" type="text" placeholder="Search..." autofocus>
+    <div class="controls-row">
+      <div class="search-wrap">
+        <span class="mdi mdi-magnify"></span>
+        <input id="search" type="text" placeholder="Search..." autofocus>
+      </div>
+      <select class="currency-select" id="currency">
+        <option value="BRL">BRL R$</option>
+        <option value="USD">USD $</option>
+        <option value="EUR">EUR €</option>
+        <option value="GBP">GBP £</option>
+        <option value="CAD">CAD C$</option>
+        <option value="JPY">JPY ¥</option>
+        <option value="AUD">AUD A$</option>
+        <option value="CNY">CNY ¥</option>
+        <option value="ARS">ARS $</option>
+      </select>
+      <span style="font-size:12px;color:var(--text-2);white-space:nowrap"><span class="mdi mdi-layers"></span> <span id="c-all"></span> models</span>
     </div>
     <div class="price-range-filter">
       <div class="range-slider" id="rangeSlider">
@@ -24,22 +38,13 @@
         <input type="range" id="maxRange" min="0" max="100" step="0.01" value="100">
       </div>
       <div class="range-labels">
-        <span id="rangeLabelMin">R$0</span>
-        <span id="rangeLabelMax">∞</span>
+        <span class="coin-indicator" id="coinInd">R$</span>
+        <input type="number" id="rangeLabelMin" class="range-number" value="0" step="any">
+        <span class="range-sep">—</span>
+        <input type="number" id="rangeLabelMax" class="range-number" value="0" step="any" placeholder="∞">
+        <span class="coin-indicator" id="coinInd2">R$</span>
       </div>
     </div>
-    <select class="currency-select" id="currency">
-      <option value="BRL">BRL R$</option>
-      <option value="USD">USD $</option>
-      <option value="EUR">EUR €</option>
-      <option value="GBP">GBP £</option>
-      <option value="CAD">CAD C$</option>
-      <option value="JPY">JPY ¥</option>
-      <option value="AUD">AUD A$</option>
-      <option value="CNY">CNY ¥</option>
-      <option value="ARS">ARS $</option>
-    </select>
-    <span style="font-size:12px;color:var(--text-2)"><span class="mdi mdi-layers"></span> <span id="c-all"></span> models</span>
   </div>
 </header>
 <div class="container">
@@ -53,9 +58,9 @@
   <div id="view-chart" class="view">
     <div class="section-title" style="margin-bottom:12px">
       <span class="mdi mdi-chart-bar"></span> Top Models by Price <span id="currencyLabel" style="font-weight:400;font-size:12px;color:var(--text-2)"></span>
-      <span style="margin-left:auto;display:flex;gap:4px;background:var(--surface);border-radius:6px;padding:2px">
-        <button class="tab chart-type active" data-chart="bar" style="padding:4px 12px;font-size:11px">Bar</button>
-        <button class="tab chart-type" data-chart="pie" style="padding:4px 12px;font-size:11px">Pie</button>
+      <span style="margin-left:auto;display:flex;gap:4px;background:var(--surface);border-radius:10px;padding:3px">
+        <button class="chart-type active" data-chart="bar" style="padding:6px 14px;font-size:12px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;background:var(--accent);color:#fff;transition:0.15s">Bar</button>
+        <button class="chart-type" data-chart="pie" style="padding:6px 14px;font-size:12px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;background:transparent;color:var(--text-2);transition:0.15s">Pie</button>
       </span>
     </div>
     <div class="chart-wrap" id="chartWrap">
