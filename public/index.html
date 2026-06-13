@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model Prices</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1><span class="mdi mdi-chart-box-outline"></span> Model Prices</h1>
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="mdi mdi-magnify"></span>
+      <input id="search" type="text" placeholder="Search..." autofocus>
+    </div>
+    <div class="price-range-filter">
+      <div class="range-slider" id="rangeSlider">
+        <div class="range-track"></div>
+        <div class="range-fill" id="rangeFill"></div>
+        <input type="range" id="minRange" min="0" max="100" step="0.01" value="0">
+        <input type="range" id="maxRange" min="0" max="100" step="0.01" value="100">
+      </div>
+      <div class="range-labels">
+        <span id="rangeLabelMin">R$0</span>
+        <span id="rangeLabelMax">∞</span>
+      </div>
+    </div>
+    <select class="currency-select" id="currency">
+      <option value="BRL">BRL R$</option>
+      <option value="USD">USD $</option>
+      <option value="EUR">EUR €</option>
+      <option value="GBP">GBP £</option>
+      <option value="CAD">CAD C$</option>
+      <option value="JPY">JPY ¥</option>
+      <option value="AUD">AUD A$</option>
+      <option value="CNY">CNY ¥</option>
+      <option value="ARS">ARS $</option>
+    </select>
+    <span style="font-size:12px;color:var(--text-2)"><span class="mdi mdi-layers"></span> <span id="c-all"></span> models</span>
+  </div>
+</header>
+<div class="container">
+  <div class="tabs" id="mainTabs" style="margin-bottom:20px">
+    <button class="tab active" data-view="chart"><span class="mdi mdi-chart-bar"></span> Chart</button>
+    <button class="tab" data-view="compare"><span class="mdi mdi-compare-horizontal"></span> Compare</button>
+    <button class="tab" data-view="matches"><span class="mdi mdi-link-variant"></span> Matches</button>
+    <button class="tab" data-view="list"><span class="mdi mdi-format-list-bulleted"></span> List</button>
+  </div>
+
+  <div id="view-chart" class="view">
+    <div class="section-title" style="margin-bottom:12px">
+      <span class="mdi mdi-chart-bar"></span> Top Models by Price <span id="currencyLabel" style="font-weight:400;font-size:12px;color:var(--text-2)"></span>
+      <span style="margin-left:auto;display:flex;gap:4px;background:var(--surface);border-radius:6px;padding:2px">
+        <button class="tab chart-type active" data-chart="bar" style="padding:4px 12px;font-size:11px">Bar</button>
+        <button class="tab chart-type" data-chart="pie" style="padding:4px 12px;font-size:11px">Pie</button>
+      </span>
+    </div>
+    <div class="chart-wrap" id="chartWrap">
+      <canvas id="priceChart"></canvas>
+      <div class="skeleton" style="position:absolute;inset:0;border-radius:10px;display:none" id="chartSkel"></div>
+    </div>
+  </div>
+
+  <div id="view-compare" class="view hidden">
+    <div class="section-title" style="margin-bottom:12px"><span class="mdi mdi-compare-horizontal"></span> Compare Models</div>
+    <div class="compare-bar">
+      <div class="search-dropdown" id="srchA"><input placeholder="Model A..." class="sd-input" id="sdA"><div class="sd-list" id="sdListA"></div></div>
+      <div class="search-dropdown" id="srchB"><input placeholder="Model B..." class="sd-input" id="sdB"><div class="sd-list" id="sdListB"></div></div>
+      <button id="compBtn"><span class="mdi mdi-compare"></span> Compare</button>
+      <div class="chips" id="compChips"></div>
+    </div>
+    <div class="compare-view active" id="compareView"></div>
+  </div>
+
+  <div id="view-matches" class="view hidden">
+    <div class="section-title" style="margin-bottom:12px"><span class="mdi mdi-link-variant"></span> Price Matches</div>
+    <div class="match-section">
+      <div class="match-list" id="matchList"></div>
+    </div>
+  </div>
+
+  <div id="view-list" class="view hidden">
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+<footer>
+  <span class="mdi mdi-update"></span> Updated: <span id="updated"></span> ·
+  <span class="mdi mdi-currency-usd"></span> Rates: <span id="rateInfo"></span>
+</footer>
+<script src="js/script.js"></script>
+</body>
+</html>
