@@ -10,7 +10,7 @@ Visualizador de preços de modelos de IA com suporte a múltiplos provedores e m
 
 | Comparação |
 |------------|
-| ![Compare](public/screenshots/compare.png) |
+| ![Compare](public/screenshots/compare-demo.png) |
 
 ## Estrutura do Projeto
 
