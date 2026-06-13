@@ -2,6 +2,16 @@
 
 Visualizador de preços de modelos de IA com suporte a múltiplos provedores e moedas.
 
+## Demonstração
+
+| Chart | Lista |
+|-------|-------|
+| ![Chart](public/screenshots/chart.png) | ![List](public/screenshots/list.png) |
+
+| Comparação |
+|------------|
+| ![Compare](public/screenshots/compare.png) |
+
 ## Estrutura do Projeto
 
 ```
@@ -15,8 +25,12 @@ Visualizador de preços de modelos de IA com suporte a múltiplos provedores e m
     ├── index.html
     ├── css/
     │   └── style.css
-    └── js/
-        └── script.js
+    ├── js/
+    │   └── script.js
+    └── screenshots/
+        ├── chart.png
+        ├── list.png
+        └── compare.png
 ```
 
 ## Scripts
