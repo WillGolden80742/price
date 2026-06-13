@@ -83,7 +83,7 @@ header h1 span.mdi {
 }
 .range-slider {
   position: relative;
-  width: 180px;
+  width: 400px;
   height: 32px;
   display: flex;
   align-items: center;
@@ -627,7 +627,7 @@ footer .mdi {
     gap: 4px;
   }
   .range-slider {
-    width: 120px;
+    width: 200px;
   }
   .compare-view.active {
     grid-template-columns: 1fr;
