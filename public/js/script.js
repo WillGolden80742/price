@@ -172,6 +172,20 @@ function render() {
   document.getElementById('currencyLabel').textContent = `(${currency}) · merged view`
 }
 
+function chartColors() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+  return {
+    text: isDark ? '#8b949e' : '#5f6368',
+    grid: isDark ? '#30363d' : '#e8eaed',
+    pieBorder: isDark ? '#0d1117' : '#fff',
+    bar1: isDark ? '#58a6ff' : '#1a73e8',
+    bar2: isDark ? '#3fb950' : '#188038',
+    pie: isDark
+      ? ['#58a6ff', '#3fb950', '#d29922', '#f85149', '#b392f0', '#db6d28', '#79c0ff', '#56d364', '#e3b341', '#ff7b72', '#bc8cff', '#f0883e', '#7ee787', '#ffa657', '#a5d6ff']
+      : ['#1a73e8', '#188038', '#ea8600', '#d93025', '#9334e6', '#e37400', '#4285f4', '#34a853', '#fbbc04', '#ea4335', '#a142f4', '#fa7b17', '#24c17b', '#f8632e', '#46bdc6']
+  }
+}
+
 let chartType = 'bar'
 
 function renderChart(models) {
@@ -186,19 +200,18 @@ function renderChart(models) {
     const sorted = [...withP].sort((a, b) => (getBestPrice(b).output || 0) - (getBestPrice(a).output || 0)).slice(0, 15)
     const labels = sorted.map(m => m.name || m.id)
     const outputData = sorted.map(m => c(getBestPrice(m).output) || 0)
-
-    const colors = ['#1a73e8', '#188038', '#ea8600', '#d93025', '#9334e6', '#e37400', '#4285f4', '#34a853', '#fbbc04', '#ea4335', '#a142f4', '#fa7b17', '#24c17b', '#f8632e', '#46bdc6']
+    const cc = chartColors()
 
     chart = new Chart(ctx, {
       type: 'pie',
       data: {
         labels,
-        datasets: [{ data: outputData, backgroundColor: colors.slice(0, sorted.length), borderColor: '#fff', borderWidth: 2 }]
+        datasets: [{ data: outputData, backgroundColor: cc.pie.slice(0, sorted.length), borderColor: cc.pieBorder, borderWidth: 2 }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'right', labels: { color: '#5f6368', font: { size: 10 }, boxWidth: 12, padding: 8 } },
+          legend: { position: 'right', labels: { color: cc.text, font: { size: 10 }, boxWidth: 12, padding: 8 } },
           tooltip: { callbacks: { label: ctx => ctx.label + ': ' + f(sorted[ctx.dataIndex] ? getBestPrice(sorted[ctx.dataIndex]).output : 0) } }
         }
       }
@@ -210,22 +223,23 @@ function renderChart(models) {
   const labels = sorted.map(m => m.name || m.id)
   const inputData = sorted.map(m => c(getBestPrice(m).input) || 0)
   const outputData = sorted.map(m => c(getBestPrice(m).output) || 0)
+  const cc = chartColors()
 
   chart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label: 'Input', data: inputData, backgroundColor: '#1a73e880', borderColor: '#1a73e8', borderWidth: 1, borderRadius: 3 },
-        { label: 'Output', data: outputData, backgroundColor: '#18803880', borderColor: '#188038', borderWidth: 1, borderRadius: 3 },
+        { label: 'Input', data: inputData, backgroundColor: cc.bar1 + '80', borderColor: cc.bar1, borderWidth: 1, borderRadius: 3 },
+        { label: 'Output', data: outputData, backgroundColor: cc.bar2 + '80', borderColor: cc.bar2, borderWidth: 1, borderRadius: 3 },
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#5f6368', font: { size: 11 } } } },
+      plugins: { legend: { labels: { color: cc.text, font: { size: 11 } } } },
       scales: {
-        x: { ticks: { color: '#5f6368', font: { size: 9 } }, grid: { color: '#e8eaed' } },
-        y: { ticks: { color: '#5f6368', font: { size: 10 } }, grid: { color: '#e8eaed' }, beginAtZero: true },
+        x: { ticks: { color: cc.text, font: { size: 9 } }, grid: { color: cc.grid } },
+        y: { ticks: { color: cc.text, font: { size: 10 } }, grid: { color: cc.grid }, beginAtZero: true },
       }
     }
   })
@@ -510,4 +524,25 @@ document.getElementById('compBtn').addEventListener('click', () => {
   document.querySelectorAll(`.card[data-id="${CSS.escape(a)}"], .card[data-id="${CSS.escape(b)}"]`).forEach(c => c.classList.add('selected'))
   updateChips()
   updateComparison()
+})
+
+const themeBtn = document.getElementById('themeToggle')
+const themeIcon = themeBtn.querySelector('.mdi')
+const saved = localStorage.getItem('theme')
+if (saved === 'dark') {
+  document.documentElement.setAttribute('data-theme', 'dark')
+  themeIcon.className = 'mdi mdi-white-balance-sunny'
+}
+themeBtn.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme')
+    themeIcon.className = 'mdi mdi-weather-night'
+    localStorage.setItem('theme', 'light')
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark')
+    themeIcon.className = 'mdi mdi-white-balance-sunny'
+    localStorage.setItem('theme', 'dark')
+  }
+  if (chart) render()
 })
