@@ -6,11 +6,11 @@ Visualizador de preços de modelos de IA com suporte a múltiplos provedores e m
 
 | Chart | Lista |
 |-------|-------|
-| ![Chart](public/screenshots/chart.png) | ![List](public/screenshots/list.png) |
+| ![Chart](public/screenshots/chart-v2.png) | ![List](public/screenshots/list-v2.png) |
 
 | Comparação |
 |------------|
-| ![Compare](public/screenshots/compare-demo.png) |
+| ![Compare](public/screenshots/compare-demo-v2.png) |
 
 ## Estrutura do Projeto
 
@@ -28,9 +28,9 @@ Visualizador de preços de modelos de IA com suporte a múltiplos provedores e m
     ├── js/
     │   └── script.js
     └── screenshots/
-        ├── chart.png
-        ├── list.png
-        └── compare.png
+        ├── chart-v2.png
+        ├── list-v2.png
+        └── compare-demo-v2.png
 ```
 
 ## Scripts
