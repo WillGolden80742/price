@@ -4,6 +4,23 @@ let currentQuery = ''
 let currency = 'BRL'
 let chart = null
 let selectedComparison = []
+let searchTimeout = null
+
+function toast(message, type = 'info') {
+  const icons = { info: 'mdi-information', success: 'mdi-check-circle', error: 'mdi-alert-circle', warning: 'mdi-alert' }
+  const existing = document.querySelector('.toast')
+  if (existing) existing.remove()
+  const el = document.createElement('div')
+  el.className = `toast ${type}`
+  el.innerHTML = `<span class="mdi ${icons[type] || icons.info}"></span><span>${esc(message)}</span>`
+  document.body.appendChild(el)
+  setTimeout(() => el.remove(), 3000)
+}
+
+function debouncedSearch(fn, ms = 150) {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(fn, ms)
+}
 
 function c(val) {
   if (val == null) return null
@@ -142,7 +159,7 @@ function renderCard(m) {
     ${priceHTML}
     <div class="meta">
       ${m.context ? `<span><span class="mdi mdi-counter"></span> ${ctxF(m.context)}</span>` : ''}
-      ${provs.length >= 2 ? `<span style="color:var(--purple)"><span class="mdi mdi-layers"></span> ${provs.join('+')}</span>` : ''}
+      ${provs.length >= 2 ? `<span class="meta-purple"><span class="mdi mdi-layers"></span> ${provs.join('+')}</span>` : ''}
     </div>
   </div>`
 }
@@ -304,14 +321,14 @@ function renderMatches() {
   const matches = Object.entries(groups).filter(([, l]) => l.length >= 2).sort((a, b) => b[1].length - a[1].length).slice(0, 12)
   const el = document.getElementById('matchList')
   if (matches.length === 0) {
-    el.innerHTML = '<div style="color:var(--text-2);font-size:12px">No price matches</div>'
+    el.innerHTML = '<div class="empty-text">No price matches</div>'
     return
   }
   el.innerHTML = matches.map(([key, list]) => {
     const [inp, out] = key.split('|')
     return `<div class="match-item">
-      <span class="mdi mdi-link-variant" style="color:var(--accent)"></span>
-      <span style="display:flex;flex-wrap:wrap;gap:4px">${list.map(m => `<span style="background:var(--surface);padding:1px 6px;border-radius:3px;font-size:11px">${esc(m.name || m.id)}</span>`).join(' <span class="mdi mdi-chevron-right" style="font-size:12px"></span> ')}</span>
+      <span class="mdi mdi-link-variant match-link-icon"></span>
+      <span class="match-names">${list.map(m => `<span class="match-name-item">${esc(m.name || m.id)}</span>`).join(' <span class="mdi mdi-chevron-right match-chevron"></span> ')}</span>
       <span class="match-price">${f(Number(inp))} / ${f(Number(out))}</span>
     </div>`
   }).join('')
@@ -325,8 +342,32 @@ function buildSD(id, inputId, listId) {
   const list = document.getElementById(listId)
   let highlightIdx = -1
 
-  function close() { list.classList.remove('open'); highlightIdx = -1 }
-  function open() { if (list.children.length > 0) list.classList.add('open') }
+  function positionDropdown() {
+    const rect = input.getBoundingClientRect()
+    list.style.top = rect.bottom + 'px'
+    list.style.left = rect.left + 'px'
+    list.style.width = rect.width + 'px'
+    list.style.maxHeight = Math.min(280, window.innerHeight - rect.bottom - 24) + 'px'
+  }
+
+  function close() {
+    list.classList.remove('open')
+    list.parentElement.classList.remove('sd-open')
+    highlightIdx = -1
+  }
+  function open() {
+    if (list.children.length > 0) {
+      positionDropdown()
+      list.classList.add('open')
+      list.parentElement.classList.add('sd-open')
+    }
+  }
+
+  function reposition() {
+    if (list.classList.contains('open')) positionDropdown()
+  }
+  window.addEventListener('scroll', reposition, true)
+  window.addEventListener('resize', reposition)
 
   function renderSuggestions(q) {
     const query = q.toLowerCase().trim()
@@ -334,7 +375,7 @@ function buildSD(id, inputId, listId) {
     if (items.length === 0) {
       list.innerHTML = '<div class="sd-empty">No matches</div>'
     } else {
-      list.innerHTML = items.map((m, i) => `<div class="sd-item" data-id="${esc(m.id)}" data-idx="${i}"><span class="mdi ${iconOf(m.family, m.id)}"></span> ${esc(m.name || m.id)} <span style="font-size:10px;color:var(--text-2);margin-left:4px">${f(getBestPrice(m).output)}</span></div>`).join('')
+      list.innerHTML = items.map((m, i) => `<div class="sd-item" data-id="${esc(m.id)}" data-idx="${i}"><span class="mdi ${iconOf(m.family, m.id)}"></span> ${esc(m.name || m.id)} <span class="sd-item-price">${f(getBestPrice(m).output)}</span></div>`).join('')
     }
     highlightIdx = -1
     open()
@@ -413,9 +454,32 @@ Promise.all([
   document.getElementById('maxRange').value = maxPrice
   updateRangeLabels()
   render()
+  toast(`Loaded ${allModels.length} models`, 'success')
+  updateHeaderPadding()
 })
 
-document.getElementById('search').addEventListener('input', () => { currentQuery = document.getElementById('search').value; render() })
+document.getElementById('search').addEventListener('input', () => {
+  debouncedSearch(() => {
+    currentQuery = document.getElementById('search').value
+    render()
+  }, 100)
+})
+
+document.getElementById('search').addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    e.target.value = ''
+    currentQuery = ''
+    render()
+    e.target.blur()
+  }
+})
+
+document.getElementById('search').addEventListener('focus', () => {
+  document.querySelector('.search-wrap .mdi-magnify').style.color = 'var(--accent)'
+})
+document.getElementById('search').addEventListener('blur', () => {
+  document.querySelector('.search-wrap .mdi-magnify').style.color = ''
+})
 
 function updateRangeLabels() {
   const min = parseFloat(document.getElementById('minRange').value)
@@ -489,25 +553,57 @@ document.getElementById('currency').addEventListener('change', function () {
 let currentView = 'chart'
 document.querySelectorAll('#mainTabs .tab').forEach(t => {
   t.addEventListener('click', () => {
-    document.querySelectorAll('#mainTabs .tab').forEach(x => x.classList.remove('active'))
-    t.classList.add('active')
-    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'))
-    document.getElementById('view-' + t.dataset.view).classList.remove('hidden')
-    currentView = t.dataset.view
-    if (currentView === 'chart') render()
+    switchView(t.dataset.view)
   })
 })
 
-document.querySelectorAll('.chart-type').forEach(b => {
+function switchView(view) {
+  document.querySelectorAll('#mainTabs .tab').forEach(x => x.classList.remove('active'))
+  document.querySelector(`#mainTabs .tab[data-view="${view}"]`).classList.add('active')
+  document.querySelectorAll('.view').forEach(v => {
+    v.style.animation = 'none'
+    v.classList.add('hidden')
+    v.offsetHeight
+  })
+  const target = document.getElementById('view-' + view)
+  target.classList.remove('hidden')
+  target.style.animation = 'slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) ease-out'
+  currentView = view
+  if (view === 'chart') render()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function regenerateChart() {
+  if (currentView === 'chart') {
+    render()
+    toast('Chart regenerated', 'success')
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return
+  const views = ['chart', 'compare', 'matches', 'list']
+  const idx = views.indexOf(currentView)
+  if (e.key === '1') switchView('chart')
+  else if (e.key === '2') switchView('compare')
+  else if (e.key === '3') switchView('matches')
+  else if (e.key === '4') switchView('list')
+  else if (e.key === 'ArrowRight' && idx < views.length - 1) switchView(views[idx + 1])
+  else if (e.key === 'ArrowLeft' && idx > 0) switchView(views[idx - 1])
+  else if (e.key === 'r' || e.key === 'R') regenerateChart()
+  else if (e.key === 'Escape') {
+    document.getElementById('search').value = ''
+    currentQuery = ''
+    render()
+    toast('Search cleared', 'info')
+  }
+})
+
+document.querySelectorAll('.chart-type-btn').forEach(b => {
   b.addEventListener('click', () => {
-    document.querySelectorAll('.chart-type').forEach(x => {
-      x.classList.remove('active')
-      x.style.background = 'transparent'
-      x.style.color = 'var(--text-2)'
-    })
+    document.querySelectorAll('.chart-type-btn').forEach(x => x.classList.remove('active'))
     b.classList.add('active')
-    b.style.background = 'var(--accent)'
-    b.style.color = '#fff'
     chartType = b.dataset.chart
     render()
   })
@@ -524,6 +620,9 @@ document.getElementById('compBtn').addEventListener('click', () => {
   document.querySelectorAll(`.card[data-id="${CSS.escape(a)}"], .card[data-id="${CSS.escape(b)}"]`).forEach(c => c.classList.add('selected'))
   updateChips()
   updateComparison()
+  const aName = allModels.find(m => m.id === a)?.name || a
+  const bName = allModels.find(m => m.id === b)?.name || b
+  toast(`Comparing ${esc(aName)} vs ${esc(bName)}`, 'info')
 })
 
 const themeBtn = document.getElementById('themeToggle')
@@ -539,10 +638,28 @@ themeBtn.addEventListener('click', () => {
     document.documentElement.removeAttribute('data-theme')
     themeIcon.className = 'mdi mdi-weather-night'
     localStorage.setItem('theme', 'light')
+    toast('Light mode', 'info')
   } else {
     document.documentElement.setAttribute('data-theme', 'dark')
     themeIcon.className = 'mdi mdi-white-balance-sunny'
     localStorage.setItem('theme', 'dark')
+    toast('Dark mode', 'info')
   }
   if (chart) render()
+})
+
+function updateHeaderPadding() {
+  const header = document.querySelector('header')
+  if (header) document.body.style.paddingTop = header.offsetHeight + 'px'
+}
+
+window.addEventListener('resize', updateHeaderPadding)
+window.addEventListener('load', updateHeaderPadding)
+
+document.getElementById('filterToggle').addEventListener('click', () => {
+  const panel = document.getElementById('filterPanel')
+  const btn = document.getElementById('filterToggle')
+  panel.classList.toggle('open')
+  btn.classList.toggle('active')
+  setTimeout(updateHeaderPadding, 350)
 })
